@@ -23,6 +23,9 @@ type SolrInfo struct {
 				Used  int64 `json:"used"`
 			} `json:"raw"`
 		} `json:"memory"`
+		JMX struct {
+                        UptimeMS  int64 `json:"upTimeMS"`
+		} `json:"jmx"`
 	}
 }
 
@@ -44,6 +47,10 @@ var (
 	solrMemoryUsed = promauto.NewGauge(prometheus.GaugeOpts{
 		Help: "SOLR used memory",
 		Name: "solr_memory_used",
+	})
+	solrUptime = promauto.NewGauge(prometheus.GaugeOpts{
+		Help: "SOLR uptime seconds",
+		Name: "solr_uptime",
 	})
 	solrScrapeErrors = promauto.NewCounter(prometheus.CounterOpts{
 		Help: "SOLR scraping errors count",
@@ -75,6 +82,7 @@ func wrapMetricsHandler(h http.Handler, url string) http.Handler {
 		solrMemoryTotal.Set(float64(info.Jvm.Memory.Raw.Total))
 		solrMemoryMax.Set(float64(info.Jvm.Memory.Raw.Max))
 		solrMemoryUsed.Set(float64(info.Jvm.Memory.Raw.Used))
+		solrUptime.Set(float64(info.Jvm.JMX.UptimeMS / 1000))
 
 		h.ServeHTTP(w, r)
 	})
